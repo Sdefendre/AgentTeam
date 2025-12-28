@@ -15,7 +15,13 @@ from datetime import datetime
 from typing import Optional, Dict, List, Any
 
 # Configuration
-API_KEY = os.environ.get('NANO_BANANA_API_KEY', os.environ.get('GEMINI_API_KEY', 'AIzaSyDor-UzDxql9rkdWYrz3RuVeXP0E3osj84'))
+# REQUIRED: Set NANO_BANANA_API_KEY or GEMINI_API_KEY environment variable
+API_KEY = os.environ.get('NANO_BANANA_API_KEY') or os.environ.get('GEMINI_API_KEY')
+if not API_KEY:
+    raise ValueError(
+        "NANO_BANANA_API_KEY or GEMINI_API_KEY environment variable is required. "
+        "Set it in your .env file or export it before running."
+    )
 MODEL = "nano-banana-pro-preview"
 API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent"
 

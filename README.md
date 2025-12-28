@@ -1,186 +1,129 @@
-# Agent Team Web App
+# Agent Team
 
-A Next.js web application for creating and publishing social media content for **DefendreSolutions.com** and **@sdefendre**.
+Social media content pipeline for **DefendreSolutions.com** and **@sdefendre**.
 
 One topic → Blog post + X post + LinkedIn post + AI image → Published to all platforms.
 
-## Features
+## Quick Start
 
-- **Single Codebase**: Everything in TypeScript/Next.js
-- **Web-Based**: No desktop app build process needed
-- **AI Content Generation**: Gemini AI for blog, X, and LinkedIn content
-- **Stock Images**: Unsplash integration for professional images
-- **Multi-Platform Publishing**: Blog, X (Twitter), and LinkedIn
-- **Modern UI**: Clean, responsive interface with real-time progress
-- **In-Memory Storage**: No database required (optional Supabase support)
+```
+User: "Write about [topic]"
+```
 
-## Setup
+The social-media-manager agent will:
+1. Research the topic
+2. Write a blog post (800-1500 words)
+3. Generate an AI image
+4. Adapt content for X (Twitter)
+5. Adapt content for LinkedIn
+6. Publish to all platforms
 
-### 1. Install Dependencies
+## File Structure
+
+```
+Agent Team/
+├── config.py              # API keys and settings
+├── publish.py             # Publishing script
+├── SKILL.md               # Master reference document
+├── .claude/agents/
+│   └── social-media-manager.md
+
+└── Content/
+    └── YYYY-MM/
+        └── topic-slug/
+            ├── blog-post.md
+            ├── x-post.txt
+            ├── linkedin-post.txt
+            └── image.jpg
+```
+
+## Key Paths
+
+| Purpose | Path |
+|---------|------|
+| Content Archive | `Content/YYYY-MM/topic-slug/` |
+| Blog Production | `/Users/stevedefendre/Desktop/Code/Active Projects/code/DefendreSolutions/blog_posts/` |
+
+Blog posts are saved to BOTH locations.
+
+## Manual Publishing
 
 ```bash
-npm install
+# Publish content from a topic folder
+python3 publish.py Content/2024-12/topic-slug/ -s next-free-slot
+
+# Publish immediately
+python3 publish.py Content/2024-12/topic-slug/ -s now
+
+# Publish to X only
+python3 publish.py Content/2024-12/topic-slug/ -p x
+
+# List recent content
+python3 publish.py --list-recent
 ```
 
-### 2. Set Up Environment Variables
+## Content Formats
 
-Create `.env.local` file in the `web-app` directory:
+### X (Twitter)
+- Hook first line
+- Short, punchy sentences
+- Line breaks for readability
+- Thread format: separate with `\n\n\n\n`
+- CTA at end
+- No hashtags (or 1-2 max)
 
-```bash
-# Content & Image Generation (Google AI)
-GEMINI_API_KEY=your_google_api_key
-
-# Social Media Publishing (Typefully)
-TYPEFULLY_API_KEY=your_typefully_api_key
-TYPEFULLY_SOCIAL_SET_ID=273516
-
-# Blog Publishing (DefendreSolutions.com)
-BLOG_API_KEY=your_blog_api_key
-BLOG_API_URL=https://defendresolutions.com/api/admin/publish-blog
-
-# Optional: App URL (for production)
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-```
-
-**Note**: Supabase is optional. The app works without it using in-memory storage. Data will persist only while the server is running.
-
-### 3. Run Development Server
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## Project Structure
-
-```
-web-app/
-├── app/
-│   ├── api/              # API routes
-│   │   ├── content/      # Content CRUD operations (in-memory)
-│   │   ├── publish/      # Publishing to X & LinkedIn
-│   │   ├── publish-blog/ # Publishing to blog
-│   │   ├── generate-image/ # Stock image fetching
-│   │   └── generate-content/ # AI content generation (Gemini)
-│   ├── page.tsx          # Main app page
-│   └── globals.css       # Global styles
-├── components/           # React components
-│   ├── CreateView.tsx    # Content creation form
-│   ├── ProgressView.tsx  # Generation progress
-│   └── PreviewView.tsx   # Content preview & publishing
-├── lib/                  # Utility functions
-│   ├── config.ts         # Configuration
-│   ├── storage.ts        # In-memory storage (no database)
-│   └── utils.ts          # Helper functions
-└── store/                # State management
-    └── useStore.ts       # Zustand store
-```
-
-## Storage
-
-The app currently uses **in-memory storage** - no database required! This means:
-
-- ✅ Works immediately without setup
-- ✅ No database configuration needed
-- ⚠️ Data is lost when server restarts
-- ⚠️ Data is not shared between server instances
-
-For production use, you can:
-- Add Supabase (see `supabase/schema.sql`)
-- Use a different database
-- Add file-based storage
-- Use localStorage for client-side persistence
-
-## API Routes
-
-### POST /api/generate-content
-Generate blog post, X post, LinkedIn post using Gemini AI
-
-### POST /api/generate-image
-Fetch relevant stock image from Unsplash
-
-### POST /api/content
-Create new content entry (stored in memory)
-
-### GET /api/content
-List all content (with optional filters)
-
-### PUT /api/content
-Update existing content
-
-### POST /api/publish
-Publish content to X and/or LinkedIn via Typefully
-
-### POST /api/publish-blog
-Publish blog post to DefendreSolutions.com
-
-## Content Generation
-
-The system uses **Gemini 2.0 Flash** to generate:
-
-### Blog Posts
-- 800-1500 words
-- SEO-optimized with frontmatter
-- H2/H3 structure
-- Professional, business-focused
-
-### X (Twitter) Posts
-- 280 characters max
-- Hook-first approach
-- Call-to-action
-- Minimal hashtags
-
-### LinkedIn Posts
-- 1000-1500 characters
+### LinkedIn
+- First line hooks before "see more"
 - Professional storytelling
-- Engaging questions
-- 3-5 hashtags
+- 1000-1500 characters
+- End with engaging question
+- 3-5 hashtags at bottom
 
-### Images
-- Stock photos from Unsplash
-- Topic-relevant
-- 1200x630 social media format
+### Blog
+- 800-1500 words
+- SEO title with keyword
+- H2/H3 structure
+- Meta description
+- CTA in conclusion
 
-## Deployment
+## APIs
 
-### Deploy to Vercel
+- **Nano Banana Pro**: AI image generation
+- **Typefully**: Publishing to X and LinkedIn
 
-1. Push your code to GitHub
-2. Import project in Vercel
-3. Add environment variables in Vercel dashboard
-4. Deploy!
+## Configuration
 
-The app will automatically deploy on every push to main.
+**IMPORTANT**: API keys are now required via environment variables for security. No hardcoded keys are allowed.
 
-**Note**: With in-memory storage, each server instance has its own data. For production, consider adding a database.
+### Setup Environment Variables
 
-## Differences from Python Pipeline
+Create a `.env` file in the project root (it's gitignored):
 
-- **No Electron**: Runs in browser instead
-- **No Python**: All logic in TypeScript
-- **No File System**: Uses in-memory storage (can add database later)
-- **No CLI Spawning**: Direct API calls
-- **Simpler Deployment**: Just deploy to Vercel
+```bash
+# Copy the example file
+cp .env.example .env
 
-## Troubleshooting
+# Edit .env and add your actual API keys
+```
 
-### Image Generation Issues
-- Using Unsplash stock images (free, no API key needed)
-- Images are automatically fetched based on topic keywords
+Or export them in your shell:
 
-### Content Generation Fails
-- Verify `GEMINI_API_KEY` is set correctly
-- Check API quota/limits
-- Review error logs in browser console
+```bash
+export NANO_BANANA_API_KEY="your-key"
+export TYPEFULLY_API_KEY="your-key"
+# OR use GEMINI_API_KEY instead of NANO_BANANA_API_KEY
+export GEMINI_API_KEY="your-key"
+```
 
-### Publishing Fails
-- **Blog**: Verify `BLOG_API_KEY` is correct
-- **Social**: Verify `TYPEFULLY_API_KEY` is correct
-- Check `TYPEFULLY_SOCIAL_SET_ID` matches your account
-- Ensure content is properly formatted
+**Required Environment Variables:**
+- `NANO_BANANA_API_KEY` or `GEMINI_API_KEY` - For AI image generation
+- `TYPEFULLY_API_KEY` - For social media publishing
 
-### Data Lost After Restart
-- This is expected with in-memory storage
-- Add a database (Supabase, PostgreSQL, etc.) for persistence
-- Or use file-based storage for simple persistence
+The application will fail with a clear error message if these are not set.
+
+## Documentation
+
+See `SKILL.md` for complete reference including:
+- Content format specifications
+- API documentation
+- Troubleshooting guide

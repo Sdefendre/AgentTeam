@@ -12,7 +12,13 @@ import requests
 from pathlib import Path
 
 # Configuration
-API_KEY = os.environ.get('GEMINI_API_KEY', 'AIzaSyDor-UzDxql9rkdWYrz3RuVeXP0E3osj84')
+# REQUIRED: Set GEMINI_API_KEY environment variable
+API_KEY = os.environ.get('GEMINI_API_KEY')
+if not API_KEY:
+    raise ValueError(
+        "GEMINI_API_KEY environment variable is required. "
+        "Set it in your .env file or export it before running."
+    )
 MODEL = "nano-banana-pro-preview"  # High quality image generation model
 API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent"
 OUTPUT_DIR = Path(os.environ.get('OUTPUT_DIR', './generated-images'))

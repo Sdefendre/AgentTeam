@@ -1,0 +1,51 @@
+{
+  "name": "agent-team-desktop",
+  "version": "1.0.0",
+  "description": "Desktop app for Agent Team social media content pipeline",
+  "main": "main/index.js",
+  "author": "Steve Defendre",
+  "license": "MIT",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
+    "dev:vite": "vite",
+    "dev:electron": "wait-on http://localhost:5173 && electron .",
+    "build": "vite build && electron-builder",
+    "build:mac": "vite build && electron-builder --mac"
+  },
+  "dependencies": {
+    "electron-store": "^8.1.0",
+    "chokidar": "^3.5.3"
+  },
+  "devDependencies": {
+    "electron": "^28.1.0",
+    "electron-builder": "^24.9.1",
+    "concurrently": "^8.2.2",
+    "wait-on": "^7.2.0",
+    "vite": "^5.0.10",
+    "@vitejs/plugin-react": "^4.2.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "zustand": "^4.4.7",
+    "react-markdown": "^9.0.1",
+    "tailwindcss": "^3.4.0",
+    "postcss": "^8.4.32",
+    "autoprefixer": "^10.4.16"
+  },
+  "build": {
+    "appId": "com.defendresolutions.agentteam",
+    "productName": "Agent Team",
+    "directories": {
+      "output": "dist"
+    },
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "assets/icon.icns",
+      "target": ["dmg", "zip"]
+    },
+    "files": [
+      "main/**/*",
+      "renderer/dist/**/*",
+      "!node_modules/**/*"
+    ]
+  }
+}

@@ -11,7 +11,12 @@ if [ -f .env ]; then
 fi
 
 # API Configuration
-GEMINI_API_KEY="${GEMINI_API_KEY:-AIzaSyDor-UzDxql9rkdWYrz3RuVeXP0E3osj84}"
+# REQUIRED: Set GEMINI_API_KEY environment variable
+if [ -z "$GEMINI_API_KEY" ]; then
+    echo "Error: GEMINI_API_KEY environment variable is required."
+    echo "Set it in your .env file or export it before running."
+    exit 1
+fi
 MODEL="gemini-2.0-flash-exp-image-generation"
 API_URL="https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent"
 

@@ -4,13 +4,20 @@ Typefully API Integration for X Post Creator Skill
 Posts to X and LinkedIn with image support for @sdefendre
 """
 
+import os
 import requests
 import json
 import sys
 import time
 from pathlib import Path
 
-API_KEY = "VxYijn54dDnw5QulI5CAuLeUk29OflHZ"
+# REQUIRED: Set TYPEFULLY_API_KEY environment variable
+API_KEY = os.environ.get('TYPEFULLY_API_KEY')
+if not API_KEY:
+    raise ValueError(
+        "TYPEFULLY_API_KEY environment variable is required. "
+        "Set it in your .env file or export it before running."
+    )
 BASE_URL = "https://api.typefully.com"
 SOCIAL_SET_ID = "273516"  # @Sdefendre
 
