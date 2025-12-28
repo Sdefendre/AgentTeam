@@ -1,11 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Optimize for faster builds
-  eslint: {
-    // Don't run ESLint during builds (run separately)
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     // Don't check types during builds (faster, check separately)
     ignoreBuildErrors: false,
