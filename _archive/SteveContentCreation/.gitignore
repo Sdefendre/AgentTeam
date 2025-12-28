@@ -1,9 +1,0 @@
-# Environment variables (contains API keys)
-.env
-.env.local
-
-# OS files
-.DS_Store
-
-# Generated content outputs
-output/

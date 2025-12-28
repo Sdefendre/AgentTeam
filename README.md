@@ -1,129 +1,131 @@
 # Agent Team
 
-Social media content pipeline for **DefendreSolutions.com** and **@sdefendre**.
+A simple web app that generates social media content from a topic.
 
-One topic → Blog post + X post + LinkedIn post + AI image → Published to all platforms.
+**Input:** A topic  
+**Output:** Blog post + X post + LinkedIn post + Stock image
 
 ## Quick Start
 
-```
-User: "Write about [topic]"
-```
-
-The social-media-manager agent will:
-1. Research the topic
-2. Write a blog post (800-1500 words)
-3. Generate an AI image
-4. Adapt content for X (Twitter)
-5. Adapt content for LinkedIn
-6. Publish to all platforms
-
-## File Structure
-
-```
-Agent Team/
-├── config.py              # API keys and settings
-├── publish.py             # Publishing script
-├── SKILL.md               # Master reference document
-├── .claude/agents/
-│   └── social-media-manager.md
-
-└── Content/
-    └── YYYY-MM/
-        └── topic-slug/
-            ├── blog-post.md
-            ├── x-post.txt
-            ├── linkedin-post.txt
-            └── image.jpg
-```
-
-## Key Paths
-
-| Purpose | Path |
-|---------|------|
-| Content Archive | `Content/YYYY-MM/topic-slug/` |
-| Blog Production | `/Users/stevedefendre/Desktop/Code/Active Projects/code/DefendreSolutions/blog_posts/` |
-
-Blog posts are saved to BOTH locations.
-
-## Manual Publishing
-
 ```bash
-# Publish content from a topic folder
-python3 publish.py Content/2024-12/topic-slug/ -s next-free-slot
+# Install dependencies
+npm install
 
-# Publish immediately
-python3 publish.py Content/2024-12/topic-slug/ -s now
-
-# Publish to X only
-python3 publish.py Content/2024-12/topic-slug/ -p x
-
-# List recent content
-python3 publish.py --list-recent
+# Run development server
+npm run dev
 ```
 
-## Content Formats
+Open [http://localhost:3000](http://localhost:3000)
 
-### X (Twitter)
-- Hook first line
-- Short, punchy sentences
-- Line breaks for readability
-- Thread format: separate with `\n\n\n\n`
-- CTA at end
-- No hashtags (or 1-2 max)
+## Setup
 
-### LinkedIn
-- First line hooks before "see more"
-- Professional storytelling
-- 1000-1500 characters
-- End with engaging question
-- 3-5 hashtags at bottom
+1. Go to **Settings** in the app
+2. Add your **Gemini API Key** (required for content generation)
+3. Optionally add Typefully API key for social publishing
+4. Optionally add Blog API key for blog publishing
 
-### Blog
-- 800-1500 words
-- SEO title with keyword
-- H2/H3 structure
-- Meta description
-- CTA in conclusion
+### Getting API Keys
 
-## APIs
+| Service | Purpose | Get It |
+|---------|---------|--------|
+| Gemini | Content generation | [Google AI Studio](https://aistudio.google.com/app/apikey) |
+| Typefully | X & LinkedIn publishing | [Typefully Settings](https://typefully.com/settings) |
+| Blog API | Blog publishing | Your blog's admin panel |
 
-- **Nano Banana Pro**: AI image generation
-- **Typefully**: Publishing to X and LinkedIn
+## Features
 
-## Configuration
+- **Content Generation**: Uses Gemini AI to create blog posts, X posts, and LinkedIn posts
+- **Stock Images**: Automatically fetches relevant images from Unsplash
+- **Publishing**: Publish directly to X, LinkedIn, and your blog
+- **Settings**: Save API keys in your browser (localStorage)
 
-**IMPORTANT**: API keys are now required via environment variables for security. No hardcoded keys are allowed.
+## Project Structure
 
-### Setup Environment Variables
-
-Create a `.env` file in the project root (it's gitignored):
-
-```bash
-# Copy the example file
-cp .env.example .env
-
-# Edit .env and add your actual API keys
+```
+├── app/
+│   ├── page.tsx              # Main page
+│   └── api/
+│       ├── generate-content/ # AI content generation
+│       ├── publish/          # X & LinkedIn publishing
+│       └── publish-blog/     # Blog publishing
+├── components/
+│   ├── CreateView.tsx        # Topic input form
+│   ├── ProgressView.tsx      # Generation progress
+│   ├── PreviewView.tsx       # Content preview & publish
+│   └── SettingsView.tsx      # API key management
+├── store/
+│   └── useStore.ts           # App state (Zustand)
+└── lib/
+    └── utils.ts              # Helper functions
 ```
 
-Or export them in your shell:
+## API Endpoints
 
-```bash
-export NANO_BANANA_API_KEY="your-key"
-export TYPEFULLY_API_KEY="your-key"
-# OR use GEMINI_API_KEY instead of NANO_BANANA_API_KEY
-export GEMINI_API_KEY="your-key"
+### POST /api/generate-content
+
+Generate content for a topic.
+
+**Request:**
+```json
+{
+  "topic": "AI automation for small businesses",
+  "platforms": ["x", "linkedin"],
+  "geminiApiKey": "your-key"
+}
 ```
 
-**Required Environment Variables:**
-- `NANO_BANANA_API_KEY` or `GEMINI_API_KEY` - For AI image generation
-- `TYPEFULLY_API_KEY` - For social media publishing
+**Response:**
+```json
+{
+  "success": true,
+  "contentId": "content_123",
+  "results": {
+    "blog": "---\ntitle: ...\n---\n...",
+    "x": "AI is changing how...",
+    "linkedin": "🚀 AI is transforming...",
+    "image": "https://source.unsplash.com/..."
+  }
+}
+```
 
-The application will fail with a clear error message if these are not set.
+### POST /api/publish
 
-## Documentation
+Publish to X and/or LinkedIn via Typefully.
 
-See `SKILL.md` for complete reference including:
-- Content format specifications
-- API documentation
-- Troubleshooting guide
+**Request:**
+```json
+{
+  "xContent": "Your X post",
+  "linkedinContent": "Your LinkedIn post",
+  "imageUrl": "https://...",
+  "typefullyApiKey": "your-key",
+  "typefullySocialSetId": "273516"
+}
+```
+
+### POST /api/publish-blog
+
+Publish a blog post.
+
+**Request:**
+```json
+{
+  "blogContent": "---\ntitle: ...\n---\n...",
+  "blogApiKey": "your-key",
+  "blogApiUrl": "https://yoursite.com/api/publish"
+}
+```
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **UI**: React + Tailwind CSS
+- **State**: Zustand
+- **AI**: Google Gemini
+- **Publishing**: Typefully API
+
+## Notes
+
+- API keys are stored in your browser's localStorage
+- Keys are sent to your own Next.js API routes only
+- No data is stored on any server
