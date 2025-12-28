@@ -61,16 +61,45 @@ export default function CreateView() {
         body: JSON.stringify({ topic, platforms, geminiApiKey }),
       })
 
-      const result = await response.json()
-
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to generate content')
+        const text = await response.text()
+        throw new Error(text || 'Failed to generate content')
       }
 
-      if (result.success) {
-        useStore.getState().setResults(result.results, result.contentId)
-      } else {
-        setError(result.error || 'Failed to generate content')
+      // Read SSE stream
+      const reader = response.body?.getReader()
+      if (!reader) throw new Error('No response body')
+
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n\n')
+        buffer = lines.pop() || ''
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6))
+
+              if (data.type === 'step') {
+                useStore.getState().updateStep(data.step, data.status)
+              } else if (data.type === 'complete') {
+                useStore.getState().setResults(data.results, data.contentId)
+              } else if (data.type === 'error') {
+                throw new Error(data.error)
+              }
+            } catch (parseErr: any) {
+              if (parseErr.message !== 'Unexpected end of JSON input') {
+                console.error('Parse error:', parseErr)
+              }
+            }
+          }
+        }
       }
     } catch (err: any) {
       setError(err.message || 'Failed to generate content')

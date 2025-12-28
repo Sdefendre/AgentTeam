@@ -1,13 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
-
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .trim()
-}
+import { NextRequest } from 'next/server'
 
 /**
  * Call Gemini API to generate content
@@ -109,63 +100,117 @@ Write the LinkedIn post now:`
 
 /**
  * POST /api/generate-content
- * Generate blog post, X post, and LinkedIn post for a topic
+ * Generate content with SSE streaming for real-time progress updates
  */
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json()
-    const { topic, platforms, geminiApiKey } = body
+  const body = await request.json()
+  const { topic, platforms, geminiApiKey } = body
 
-    if (!topic) {
-      return NextResponse.json({ error: 'Topic is required' }, { status: 400 })
-    }
+  // Create a ReadableStream for SSE
+  const stream = new ReadableStream({
+    async start(controller) {
+      const encoder = new TextEncoder()
 
-    // Use provided API key or fall back to environment variable
-    const apiKey = geminiApiKey || process.env.GEMINI_API_KEY
+      // Helper to send SSE events
+      const sendEvent = (type: string, data: any) => {
+        const message = `data: ${JSON.stringify({ type, ...data })}\n\n`
+        controller.enqueue(encoder.encode(message))
+      }
 
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'Gemini API key is required. Add it in Settings.' },
-        { status: 400 }
-      )
-    }
+      try {
+        // Validate inputs
+        if (!topic) {
+          sendEvent('error', { error: 'Topic is required' })
+          controller.close()
+          return
+        }
 
-    const topicSlug = slugify(topic)
+        const apiKey = geminiApiKey || process.env.GEMINI_API_KEY
 
-    // Generate blog post first
-    console.log(`Generating blog post for: ${topic}`)
-    const blogPost = await generateBlogPost(topic, apiKey)
+        if (!apiKey) {
+          sendEvent('error', { error: 'Gemini API key is required. Add it in Settings.' })
+          controller.close()
+          return
+        }
 
-    // Extract summary for social posts
-    const blogBody = blogPost.split('---').slice(2).join('---').trim()
-    const blogSummary = blogBody.substring(0, 500)
+        // Step 1: Generate blog post
+        sendEvent('step', { step: 'blog', status: 'in_progress' })
+        let blogPost: string
+        try {
+          blogPost = await generateBlogPost(topic, apiKey)
+          sendEvent('step', { step: 'blog', status: 'complete' })
+        } catch (err: any) {
+          sendEvent('step', { step: 'blog', status: 'error' })
+          throw new Error(`Blog generation failed: ${err.message}`)
+        }
 
-    // Generate social posts
-    console.log('Generating social media posts...')
-    const [xPost, linkedinPost] = await Promise.all([
-      platforms.includes('x') ? generateXPost(topic, blogSummary, apiKey) : null,
-      platforms.includes('linkedin') ? generateLinkedInPost(topic, blogSummary, apiKey) : null,
-    ])
+        // Extract summary for social posts
+        const blogBody = blogPost.split('---').slice(2).join('---').trim()
+        const blogSummary = blogBody.substring(0, 500)
 
-    // Get stock image - using picsum for reliable placeholder images
-    // source.unsplash.com is deprecated
-    const imageUrl = `https://picsum.photos/seed/${encodeURIComponent(topic.substring(0, 20))}/1200/630`
+        // Step 2: Generate X post
+        let xPost: string | null = null
+        if (platforms.includes('x')) {
+          sendEvent('step', { step: 'x', status: 'in_progress' })
+          try {
+            xPost = await generateXPost(topic, blogSummary, apiKey)
+            sendEvent('step', { step: 'x', status: 'complete' })
+          } catch (err: any) {
+            sendEvent('step', { step: 'x', status: 'error' })
+            throw new Error(`X post generation failed: ${err.message}`)
+          }
+        } else {
+          sendEvent('step', { step: 'x', status: 'complete' })
+        }
 
-    return NextResponse.json({
-      success: true,
-      contentId: `content_${Date.now()}`,
-      results: {
-        blog: blogPost,
-        x: xPost || undefined,
-        linkedin: linkedinPost || undefined,
-        image: imageUrl,
-      },
-    })
-  } catch (error: any) {
-    console.error('Content generation error:', error)
-    return NextResponse.json(
-      { error: error.message || 'Failed to generate content' },
-      { status: 500 }
-    )
-  }
+        // Step 3: Generate LinkedIn post
+        let linkedinPost: string | null = null
+        if (platforms.includes('linkedin')) {
+          sendEvent('step', { step: 'linkedin', status: 'in_progress' })
+          try {
+            linkedinPost = await generateLinkedInPost(topic, blogSummary, apiKey)
+            sendEvent('step', { step: 'linkedin', status: 'complete' })
+          } catch (err: any) {
+            sendEvent('step', { step: 'linkedin', status: 'error' })
+            throw new Error(`LinkedIn post generation failed: ${err.message}`)
+          }
+        } else {
+          sendEvent('step', { step: 'linkedin', status: 'complete' })
+        }
+
+        // Step 4: Get stock image
+        sendEvent('step', { step: 'image', status: 'in_progress' })
+        const imageUrl = `https://picsum.photos/seed/${encodeURIComponent(topic.substring(0, 20))}/1200/630`
+        // Small delay to show the image step animation
+        await new Promise(resolve => setTimeout(resolve, 500))
+        sendEvent('step', { step: 'image', status: 'complete' })
+
+        // Send final results
+        sendEvent('complete', {
+          success: true,
+          contentId: `content_${Date.now()}`,
+          results: {
+            blog: blogPost,
+            x: xPost || undefined,
+            linkedin: linkedinPost || undefined,
+            image: imageUrl,
+          },
+        })
+
+      } catch (error: any) {
+        console.error('Content generation error:', error)
+        sendEvent('error', { error: error.message || 'Failed to generate content' })
+      } finally {
+        controller.close()
+      }
+    },
+  })
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    },
+  })
 }
