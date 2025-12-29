@@ -345,22 +345,22 @@ export default function CalendarView() {
               )
             })}
           </div>
-        </DndContext>
 
-        {/* Schedule from History */}
-        {history.length > 0 && (
-          <div className="mt-8 pt-8 border-t border-slate-700">
-            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <span>📋</span>
-              Drag from History to Schedule
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {history.slice(0, 6).map((item) => (
-                <DraggableHistoryItem key={item.id} item={item} />
-              ))}
+          {/* Schedule from History */}
+          {history.length > 0 && (
+            <div className="mt-8 pt-8 border-t border-slate-700">
+              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <span>📋</span>
+                Drag from History to Schedule
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {history.slice(0, 6).map((item) => (
+                  <DraggableHistoryItem key={item.id} item={item} />
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </DndContext>
       </div>
     </div>
   )
