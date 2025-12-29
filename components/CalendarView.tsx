@@ -2,7 +2,7 @@
 
 import { useStore } from '@/store/useStore'
 import { useState, useMemo } from 'react'
-import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useDraggable, useDroppable } from '@dnd-kit/core'
+import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useDraggable, useDroppable, pointerWithin, rectIntersection } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import {
   format,
@@ -129,7 +129,7 @@ function DroppableDay({ date, posts, onDelete, currentMonth }: DroppableDayProps
   return (
     <div
       ref={setNodeRef}
-      className={`min-h-[80px] p-1.5 rounded-lg border transition-all ${
+      className={`h-full min-h-[80px] p-1.5 rounded-lg border transition-all ${
         isOver
           ? 'bg-violet-600/20 border-violet-400/60 shadow-xl shadow-violet-500/30 scale-[1.02]'
           : isTodayDate
@@ -322,6 +322,7 @@ export default function CalendarView() {
         <DndContext
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
+          collisionDetection={pointerWithin}
         >
           <div className="flex-1 flex flex-col min-h-0">
             {/* Week day headers */}
@@ -333,8 +334,8 @@ export default function CalendarView() {
               ))}
             </div>
 
-            {/* Calendar days - Scrollable */}
-            <div className="grid grid-cols-7 gap-1 flex-1 overflow-auto">
+            {/* Calendar days */}
+            <div className="grid grid-cols-7 gap-1 flex-1">
               {calendarDays.map((day) => {
                 const dateKey = format(day, 'yyyy-MM-dd')
                 const dayPosts = postsByDate[dateKey] || []
