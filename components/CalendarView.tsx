@@ -52,20 +52,13 @@ function DraggablePost({ post, onDelete }: DraggablePostProps) {
       style={style}
       {...attributes}
       {...listeners}
-      className={`group relative p-2 mb-2 rounded-lg border text-xs transition-all hover:scale-[1.02] ${statusColors[post.status]} ${isDragging ? 'z-50' : ''}`}
+      className={`group relative p-1.5 mb-1 rounded border text-[10px] transition-all hover:scale-[1.02] ${statusColors[post.status]} ${isDragging ? 'z-50' : ''}`}
     >
       <div className="flex items-start justify-between gap-1">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1 mb-1">
-            <span>{statusIcons[post.status]}</span>
-            <span className="text-white font-medium truncate">{post.topic}</span>
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {post.platforms.map((platform: string) => (
-              <span key={platform} className="px-1.5 py-0.5 bg-slate-700/50 rounded text-[10px] text-slate-400">
-                {platform === 'x' ? '𝕏' : platform === 'linkedin' ? '💼' : '📝'}
-              </span>
-            ))}
+          <div className="flex items-center gap-0.5">
+            <span className="text-xs">{statusIcons[post.status]}</span>
+            <span className="text-white font-medium truncate text-[10px]">{post.topic}</span>
           </div>
         </div>
         <button
@@ -73,7 +66,7 @@ function DraggablePost({ post, onDelete }: DraggablePostProps) {
             e.stopPropagation()
             onDelete(post.id)
           }}
-          className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition-opacity"
+          className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition-opacity text-xs"
         >
           ×
         </button>
@@ -104,16 +97,13 @@ function DraggableHistoryItem({ item }: DraggableHistoryItemProps) {
       style={style}
       {...attributes}
       {...listeners}
-      className={`p-4 rounded-xl bg-slate-800/50 border border-slate-700 hover:border-violet-500/40 text-left transition-all hover:scale-[1.02] ${isDragging ? 'z-50' : ''}`}
+      className={`flex-shrink-0 w-48 p-3 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-violet-500/40 text-left transition-all hover:scale-[1.02] ${isDragging ? 'z-50' : ''}`}
     >
-      <div className="text-sm font-medium text-white mb-2 truncate">
+      <div className="text-xs font-medium text-white mb-1 truncate">
         {item.topic}
       </div>
-      <div className="text-xs text-slate-400">
-        {format(new Date(item.createdAt), 'MMM d, yyyy')}
-      </div>
-      <div className="text-xs text-violet-400 mt-2">
-        Drag to calendar to schedule
+      <div className="text-[10px] text-slate-400">
+        {format(new Date(item.createdAt), 'MMM d')}
       </div>
     </div>
   )
@@ -139,7 +129,7 @@ function DroppableDay({ date, posts, onDelete, currentMonth }: DroppableDayProps
   return (
     <div
       ref={setNodeRef}
-      className={`min-h-[120px] p-2 rounded-lg border transition-all ${
+      className={`min-h-[80px] p-1.5 rounded-lg border transition-all ${
         isOver
           ? 'bg-violet-600/20 border-violet-400/60 shadow-xl shadow-violet-500/30 scale-[1.02]'
           : isTodayDate
@@ -150,7 +140,7 @@ function DroppableDay({ date, posts, onDelete, currentMonth }: DroppableDayProps
       }`}
     >
       {/* Date number */}
-      <div className={`text-sm font-medium mb-2 ${
+      <div className={`text-xs font-medium mb-1 ${
         isTodayDate
           ? 'text-violet-400'
           : isCurrentMonth
@@ -159,7 +149,7 @@ function DroppableDay({ date, posts, onDelete, currentMonth }: DroppableDayProps
       }`}>
         {format(date, 'd')}
         {isTodayDate && (
-          <span className="ml-1 text-[10px] text-violet-400">Today</span>
+          <span className="ml-1 text-[9px] text-violet-400">Today</span>
         )}
       </div>
 
@@ -172,7 +162,7 @@ function DroppableDay({ date, posts, onDelete, currentMonth }: DroppableDayProps
 
       {/* Drop zone indicator */}
       {isOver && posts.length === 0 && (
-        <div className="flex items-center justify-center h-16 text-violet-400 text-xs">
+        <div className="flex items-center justify-center h-12 text-violet-400 text-[10px]">
           Drop here
         </div>
       )}
@@ -257,60 +247,63 @@ export default function CalendarView() {
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
   return (
-    <div className="max-w-7xl mx-auto animate-slide-up">
-      <div className="card-glass p-6 sm:p-8">
+    <div className="max-w-7xl mx-auto animate-slide-up h-full flex flex-col">
+      <div className="card-glass p-4 flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-4 flex-shrink-0">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+            <h1 className="text-xl sm:text-2xl font-bold text-white">
               Content Calendar
             </h1>
-            <p className="text-slate-400">
-              Drag and drop posts to schedule them
+            <p className="text-xs text-slate-400">
+              Drag and drop posts to schedule
             </p>
           </div>
 
           {/* Month Navigation */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button
               onClick={handlePrevMonth}
-              className="p-2 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-violet-500/40 text-slate-300 hover:text-white transition-all"
+              className="p-1.5 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-violet-500/40 text-slate-300 hover:text-white transition-all text-sm"
             >
               ←
             </button>
-            <div className="text-center min-w-[180px]">
-              <div className="text-xl font-bold text-white">
+            <div className="text-center min-w-[140px]">
+              <div className="text-base font-bold text-white">
                 {format(currentMonth, 'MMMM yyyy')}
               </div>
             </div>
             <button
               onClick={handleNextMonth}
-              className="p-2 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-violet-500/40 text-slate-300 hover:text-white transition-all"
+              className="p-1.5 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-violet-500/40 text-slate-300 hover:text-white transition-all text-sm"
             >
               →
             </button>
             <button
               onClick={handleToday}
-              className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-600/20 to-indigo-600/20 border border-violet-500/30 hover:border-violet-500/60 text-violet-300 hover:text-violet-200 font-medium transition-all"
+              className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-600/20 to-indigo-600/20 border border-violet-500/30 hover:border-violet-500/60 text-violet-300 hover:text-violet-200 text-xs font-medium transition-all"
             >
               Today
             </button>
           </div>
         </div>
 
-        {/* Legend */}
-        <div className="flex flex-wrap items-center gap-4 mb-6 pb-6 border-b border-slate-700">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">📝</span>
-            <span className="text-sm text-slate-400">Draft</span>
+        {/* Legend - Compact */}
+        <div className="flex items-center gap-3 mb-3 pb-3 border-b border-slate-700/50 text-xs flex-shrink-0">
+          <div className="flex items-center gap-1.5">
+            <span className="text-base">📝</span>
+            <span className="text-slate-400">Draft</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">⏰</span>
-            <span className="text-sm text-slate-400">Scheduled</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-base">⏰</span>
+            <span className="text-slate-400">Scheduled</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">✅</span>
-            <span className="text-sm text-slate-400">Published</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-base">✅</span>
+            <span className="text-slate-400">Published</span>
+          </div>
+          <div className="flex items-center gap-1.5 ml-auto">
+            <span className="text-violet-400">📋 Drag from history below ↓</span>
           </div>
         </div>
 
@@ -319,42 +312,44 @@ export default function CalendarView() {
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          {/* Week day headers */}
-          <div className="grid grid-cols-7 gap-2 mb-2">
-            {weekDays.map((day) => (
-              <div key={day} className="text-center text-sm font-bold text-slate-400 py-2">
-                {day}
-              </div>
-            ))}
+          <div className="flex-1 flex flex-col min-h-0">
+            {/* Week day headers */}
+            <div className="grid grid-cols-7 gap-1 mb-1 flex-shrink-0">
+              {weekDays.map((day) => (
+                <div key={day} className="text-center text-[10px] font-bold text-slate-400 py-1">
+                  {day}
+                </div>
+              ))}
+            </div>
+
+            {/* Calendar days - Scrollable */}
+            <div className="grid grid-cols-7 gap-1 flex-1 overflow-auto">
+              {calendarDays.map((day) => {
+                const dateKey = format(day, 'yyyy-MM-dd')
+                const dayPosts = postsByDate[dateKey] || []
+
+                return (
+                  <DroppableDay
+                    key={dateKey}
+                    date={day}
+                    posts={dayPosts}
+                    onDelete={deleteScheduledPost}
+                    currentMonth={currentMonth}
+                  />
+                )
+              })}
+            </div>
           </div>
 
-          {/* Calendar days */}
-          <div className="grid grid-cols-7 gap-2">
-            {calendarDays.map((day) => {
-              const dateKey = format(day, 'yyyy-MM-dd')
-              const dayPosts = postsByDate[dateKey] || []
-
-              return (
-                <DroppableDay
-                  key={dateKey}
-                  date={day}
-                  posts={dayPosts}
-                  onDelete={deleteScheduledPost}
-                  currentMonth={currentMonth}
-                />
-              )
-            })}
-          </div>
-
-          {/* Schedule from History */}
+          {/* Schedule from History - Horizontal Scroll */}
           {history.length > 0 && (
-            <div className="mt-8 pt-8 border-t border-slate-700">
-              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <span>📋</span>
-                Drag from History to Schedule
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {history.slice(0, 6).map((item) => (
+            <div className="mt-3 pt-3 border-t border-slate-700/50 flex-shrink-0">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-bold text-slate-400">📋 HISTORY</span>
+                <span className="text-[10px] text-violet-400">← Scroll & drag to calendar</span>
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {history.slice(0, 12).map((item) => (
                   <DraggableHistoryItem key={item.id} item={item} />
                 ))}
               </div>
