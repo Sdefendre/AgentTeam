@@ -5,6 +5,7 @@ import CreateView from '@/components/CreateView'
 import ProgressView from '@/components/ProgressView'
 import SettingsView from '@/components/SettingsView'
 import HistoryView from '@/components/HistoryView'
+import CalendarView from '@/components/CalendarView'
 import dynamic from 'next/dynamic'
 
 const PreviewView = dynamic(() => import('@/components/PreviewView'), {
@@ -21,10 +22,7 @@ export default function Home() {
       case 'preview':
         return <PreviewView />
       case 'calendar':
-        return <div className="max-w-4xl mx-auto card-glass p-8 text-center">
-          <h2 className="text-2xl font-bold text-white mb-2">Calendar View</h2>
-          <p className="text-slate-400">Coming soon - Content calendar with drag-drop scheduling</p>
-        </div>
+        return <CalendarView />
       case 'settings':
         return <SettingsView />
       case 'history':

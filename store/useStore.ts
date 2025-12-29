@@ -38,8 +38,8 @@ interface UserProfile {
 
 interface Store {
   // View state
-  currentView: 'create' | 'progress' | 'preview' | 'settings' | 'history'
-  setCurrentView: (view: 'create' | 'progress' | 'preview' | 'settings' | 'history') => void
+  currentView: 'create' | 'progress' | 'preview' | 'settings' | 'history' | 'calendar'
+  setCurrentView: (view: 'create' | 'progress' | 'preview' | 'settings' | 'history' | 'calendar') => void
 
   // Topic input
   topic: string
@@ -74,6 +74,16 @@ interface Store {
   showMarkdown: boolean
   toggleMarkdown: () => void
 
+  // Calendar & Scheduled Posts
+  scheduledPosts: ScheduledPost[]
+  addScheduledPost: (post: ScheduledPost) => void
+  updateScheduledPost: (id: string, updates: Partial<ScheduledPost>) => void
+  deleteScheduledPost: (id: string) => void
+
+  // User Profile
+  userProfile: UserProfile
+  updateUserProfile: (profile: Partial<UserProfile>) => void
+
   // Error state
   error: string | null
   setError: (error: string | null) => void
@@ -98,6 +108,52 @@ function loadHistory(): HistoryItem[] {
 // Save history to localStorage
 function saveHistory(history: HistoryItem[]) {
   localStorage.setItem('smm-agent-history', JSON.stringify(history))
+}
+
+// Load scheduled posts from localStorage
+function loadScheduledPosts(): ScheduledPost[] {
+  if (typeof window === 'undefined') return []
+  const stored = localStorage.getItem('smm-agent-scheduled-posts')
+  if (!stored) return []
+  try {
+    return JSON.parse(stored)
+  } catch {
+    return []
+  }
+}
+
+// Save scheduled posts to localStorage
+function saveScheduledPosts(posts: ScheduledPost[]) {
+  localStorage.setItem('smm-agent-scheduled-posts', JSON.stringify(posts))
+}
+
+// Load user profile from localStorage
+function loadUserProfile(): UserProfile {
+  if (typeof window === 'undefined') return {
+    name: 'Your Name',
+    title: 'Your Title',
+    handle: '@yourhandle'
+  }
+  const stored = localStorage.getItem('smm-agent-user-profile')
+  if (!stored) return {
+    name: 'Your Name',
+    title: 'Your Title',
+    handle: '@yourhandle'
+  }
+  try {
+    return JSON.parse(stored)
+  } catch {
+    return {
+      name: 'Your Name',
+      title: 'Your Title',
+      handle: '@yourhandle'
+    }
+  }
+}
+
+// Save user profile to localStorage
+function saveUserProfile(profile: UserProfile) {
+  localStorage.setItem('smm-agent-user-profile', JSON.stringify(profile))
 }
 
 export const useStore = create<Store>((set, get) => ({
@@ -191,6 +247,38 @@ export const useStore = create<Store>((set, get) => ({
   setPreviewTab: (tab) => set({ previewTab: tab }),
   showMarkdown: false,
   toggleMarkdown: () => set((state) => ({ showMarkdown: !state.showMarkdown })),
+
+  // Calendar & Scheduled Posts
+  scheduledPosts: typeof window !== 'undefined' ? loadScheduledPosts() : [],
+  addScheduledPost: (post) => {
+    const scheduledPosts = [...get().scheduledPosts, post]
+    saveScheduledPosts(scheduledPosts)
+    set({ scheduledPosts })
+  },
+  updateScheduledPost: (id, updates) => {
+    const scheduledPosts = get().scheduledPosts.map((post) =>
+      post.id === id ? { ...post, ...updates } : post
+    )
+    saveScheduledPosts(scheduledPosts)
+    set({ scheduledPosts })
+  },
+  deleteScheduledPost: (id) => {
+    const scheduledPosts = get().scheduledPosts.filter((post) => post.id !== id)
+    saveScheduledPosts(scheduledPosts)
+    set({ scheduledPosts })
+  },
+
+  // User Profile
+  userProfile: typeof window !== 'undefined' ? loadUserProfile() : {
+    name: 'Your Name',
+    title: 'Your Title',
+    handle: '@yourhandle'
+  },
+  updateUserProfile: (profile) => {
+    const userProfile = { ...get().userProfile, ...profile }
+    saveUserProfile(userProfile)
+    set({ userProfile })
+  },
 
   // Error state
   error: null,
