@@ -2,8 +2,7 @@
 
 import { useStore } from '@/store/useStore'
 import { useState, useMemo } from 'react'
-import { DndContext, closestCenter, DragEndEvent, DragStartEvent } from '@dnd-kit/core'
-import { arrayMove, SortableContext, useSortable } from '@dnd-kit/sortable'
+import { DndContext, DragEndEvent, DragStartEvent, useDraggable, useDroppable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import {
   format,
@@ -12,7 +11,6 @@ import {
   eachDayOfInterval,
   isSameMonth,
   isToday,
-  isSameDay,
   addMonths,
   subMonths,
   startOfWeek,
@@ -25,14 +23,15 @@ interface DraggablePostProps {
 }
 
 function DraggablePost({ post, onDelete }: DraggablePostProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: post.id
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: post.id,
+    data: { post }
   })
 
   const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
+    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
     opacity: isDragging ? 0.5 : 1,
+    cursor: isDragging ? 'grabbing' : 'grab',
   }
 
   const statusColors = {
@@ -53,7 +52,7 @@ function DraggablePost({ post, onDelete }: DraggablePostProps) {
       style={style}
       {...attributes}
       {...listeners}
-      className={`group relative p-2 mb-2 rounded-lg border text-xs cursor-move hover:scale-[1.02] transition-all ${statusColors[post.status]}`}
+      className={`group relative p-2 mb-2 rounded-lg border text-xs transition-all hover:scale-[1.02] ${statusColors[post.status]} ${isDragging ? 'z-50' : ''}`}
     >
       <div className="flex items-start justify-between gap-1">
         <div className="flex-1 min-w-0">
@@ -91,17 +90,28 @@ interface DroppableDayProps {
 }
 
 function DroppableDay({ date, posts, onDelete, currentMonth }: DroppableDayProps) {
+  const dateKey = format(date, 'yyyy-MM-dd')
+  const { setNodeRef, isOver } = useDroppable({
+    id: dateKey,
+    data: { date: dateKey }
+  })
+
   const isCurrentMonth = isSameMonth(date, currentMonth)
   const isTodayDate = isToday(date)
 
   return (
-    <div className={`min-h-[120px] p-2 rounded-lg border transition-all ${
-      isTodayDate
-        ? 'bg-violet-500/10 border-violet-500/40 shadow-lg shadow-violet-500/20'
-        : isCurrentMonth
-        ? 'bg-slate-800/30 border-slate-700/50 hover:border-slate-600/50'
-        : 'bg-slate-900/20 border-slate-800/30'
-    }`}>
+    <div
+      ref={setNodeRef}
+      className={`min-h-[120px] p-2 rounded-lg border transition-all ${
+        isOver
+          ? 'bg-violet-600/20 border-violet-400/60 shadow-xl shadow-violet-500/30 scale-[1.02]'
+          : isTodayDate
+          ? 'bg-violet-500/10 border-violet-500/40 shadow-lg shadow-violet-500/20'
+          : isCurrentMonth
+          ? 'bg-slate-800/30 border-slate-700/50 hover:border-slate-600/50'
+          : 'bg-slate-900/20 border-slate-800/30'
+      }`}
+    >
       {/* Date number */}
       <div className={`text-sm font-medium mb-2 ${
         isTodayDate
@@ -118,12 +128,17 @@ function DroppableDay({ date, posts, onDelete, currentMonth }: DroppableDayProps
 
       {/* Scheduled posts */}
       <div className="space-y-1">
-        <SortableContext items={posts.map(p => p.id)}>
-          {posts.map((post) => (
-            <DraggablePost key={post.id} post={post} onDelete={onDelete} />
-          ))}
-        </SortableContext>
+        {posts.map((post) => (
+          <DraggablePost key={post.id} post={post} onDelete={onDelete} />
+        ))}
       </div>
+
+      {/* Drop zone indicator */}
+      {isOver && posts.length === 0 && (
+        <div className="flex items-center justify-center h-16 text-violet-400 text-xs">
+          Drop here
+        </div>
+      )}
     </div>
   )
 }
@@ -131,7 +146,7 @@ function DroppableDay({ date, posts, onDelete, currentMonth }: DroppableDayProps
 export default function CalendarView() {
   const { scheduledPosts, updateScheduledPost, deleteScheduledPost, history, addScheduledPost } = useStore()
   const [currentMonth, setCurrentMonth] = useState(new Date())
-  const [draggedPost, setDraggedPost] = useState<any>(null)
+  const [activeId, setActiveId] = useState<string | null>(null)
 
   // Get calendar days (including padding days from prev/next month)
   const calendarDays = useMemo(() => {
@@ -154,17 +169,21 @@ export default function CalendarView() {
   }, [scheduledPosts])
 
   const handleDragStart = (event: DragStartEvent) => {
-    const post = scheduledPosts.find(p => p.id === event.active.id)
-    setDraggedPost(post)
+    setActiveId(event.active.id as string)
   }
 
   const handleDragEnd = (event: DragEndEvent) => {
-    const { over } = event
-    if (over && draggedPost) {
+    const { active, over } = event
+
+    if (over && active.id !== over.id) {
+      const postId = active.id as string
       const newDate = over.id as string
-      updateScheduledPost(draggedPost.id, { scheduledDate: newDate })
+
+      // Update the post's scheduled date
+      updateScheduledPost(postId, { scheduledDate: newDate })
     }
-    setDraggedPost(null)
+
+    setActiveId(null)
   }
 
   const handleScheduleFromHistory = (item: any) => {
@@ -195,7 +214,7 @@ export default function CalendarView() {
               Content Calendar
             </h1>
             <p className="text-slate-400">
-              Schedule and manage your posts
+              Drag and drop posts to schedule them
             </p>
           </div>
 
@@ -245,7 +264,6 @@ export default function CalendarView() {
 
         {/* Calendar Grid */}
         <DndContext
-          collisionDetection={closestCenter}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
