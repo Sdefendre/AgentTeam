@@ -16,12 +16,24 @@ Both modes create complete content packages: blog post, X post, LinkedIn post, a
 Agent Team/
 ├── Web App (Next.js)
 │   ├── app/                    # Next.js App Router
-│   │   ├── page.tsx            # Main UI
+│   │   ├── page.tsx            # Main UI with view routing
+│   │   ├── layout.tsx          # Root layout + theme init
+│   │   ├── globals.css         # Theme system + CSS variables
+│   │   ├── changelog/          # Changelog page
 │   │   └── api/                # API routes
-│   │       ├── generate-content/  # AI content generation
+│   │       ├── generate-content/  # AI content generation (SSE)
+│   │       ├── suggest-topics/    # AI topic suggestions
 │   │       ├── publish/           # X & LinkedIn publishing
-│   │       └── publish-blog/      # Blog publishing
+│   │       ├── publish-blog/      # Blog publishing
+│   │       └── settings/          # Environment variable fallbacks
 │   ├── components/             # React components
+│   │   ├── CreateView.tsx         # Topic input + suggestions
+│   │   ├── ProgressView.tsx       # Generation progress
+│   │   ├── PreviewView.tsx        # Content preview + publish
+│   │   ├── HistoryView.tsx        # Post history
+│   │   ├── CalendarView.tsx       # Drag-and-drop scheduler
+│   │   ├── SettingsView.tsx       # API key config
+│   │   └── PlatformPreviews/      # X & LinkedIn preview cards
 │   └── store/                  # Zustand state management
 │
 ├── CLI Tools (Python)
@@ -351,6 +363,67 @@ curl -X POST https://defendre-solutions.vercel.app/api/admin/publish-blog \
   }'
 ```
 
+## Theme System
+
+The app supports **light and dark modes** with automatic system preference detection.
+
+### How It Works
+
+1. **Initialization** (`app/layout.tsx`): An inline script runs before React hydrates to:
+   - Check `localStorage` for saved preference (`smm-theme`)
+   - Fall back to system preference via `prefers-color-scheme`
+   - Set `data-theme` attribute on `<html>` element
+
+2. **CSS Variables** (`app/globals.css`): All colors use CSS custom properties that change based on `html[data-theme="dark"]`
+
+### Key CSS Variables
+
+| Variable | Light | Dark | Usage |
+|----------|-------|------|-------|
+| `--bg` | `#f6f3ee` | `#0b0f14` | Page background |
+| `--surface` | `rgba(255,255,255,0.82)` | `rgba(15,23,42,0.82)` | Cards, panels |
+| `--text` | `#1c1b20` | `#f8fafc` | Primary text |
+| `--text-muted` | `#5f5f6b` | `#a3b0c2` | Secondary text |
+| `--accent` | `#0ea5a4` | `#22d3ee` | Primary accent |
+| `--border` | `rgba(24,24,27,0.12)` | `rgba(148,163,184,0.2)` | Borders |
+
+### Utility Classes
+
+```css
+/* Text colors */
+.text-primary    /* var(--text) */
+.text-muted      /* var(--text-muted) */
+.text-accent     /* var(--accent) */
+
+/* Backgrounds */
+.bg-surface      /* var(--surface) */
+.bg-elevated     /* var(--bg-elevated) */
+.bg-accent-soft  /* var(--accent-soft) */
+
+/* Borders */
+.border-subtle   /* var(--border) */
+.border-strong   /* var(--border-strong) */
+```
+
+### Background Effects
+
+The app uses mesh gradient backgrounds with floating orbs:
+- `.app-shell` - Main container
+- `.app-backdrop` - Fixed background with gradients
+- `.app-orb` - Animated floating gradient orbs
+
+### Adding Theme Toggle (Future)
+
+```typescript
+// Toggle theme
+const toggleTheme = () => {
+  const current = document.documentElement.dataset.theme
+  const next = current === 'dark' ? 'light' : 'dark'
+  document.documentElement.dataset.theme = next
+  localStorage.setItem('smm-theme', next)
+}
+```
+
 ## Key Features
 
 ### Web App
@@ -359,6 +432,8 @@ curl -X POST https://defendre-solutions.vercel.app/api/admin/publish-blog \
 - **Preview System**: Rendered/raw markdown views
 - **One-click Publishing**: Direct publish to all platforms
 - **History Management**: View and reload previous generations
+- **Content Calendar**: Drag-and-drop scheduling with date management
+- **Light/Dark Theme**: Automatic system preference detection with manual override
 - **Settings UI**: Configure API keys in browser
 - **Mobile Responsive**: Works on all devices
 
@@ -464,5 +539,5 @@ Content/
 
 ---
 
-**Last Updated**: December 28, 2025
+**Last Updated**: December 29, 2025
 **Maintainer**: Steve Defendre (steve.defendre12@gmail.com)

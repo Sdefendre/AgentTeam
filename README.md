@@ -60,11 +60,18 @@ Open [http://localhost:3000](http://localhost:3000)
 - **Browser Storage**: API keys and history saved in localStorage
 - **Session Persistence**: Resume previous work across browser sessions
 
+### Content Calendar
+- **Drag-and-Drop Scheduling**: Drag content from history onto calendar dates
+- **Visual Status Indicators**: Draft, scheduled, and published states
+- **Month Navigation**: Browse through months with today quick-jump
+- **Responsive Grid**: Adapts to viewport size
+
 ### User Experience
+- **Light/Dark Theme**: Automatic system preference detection with localStorage persistence
 - **Mobile Responsive**: Optimized layouts for all device sizes
 - **Real-time Validation**: API key warnings and error handling
-- **Premium Dark UI**: Modern glassmorphism design with gradient accents
-- **Animated Backgrounds**: Pulsing gradient orbs and subtle grid overlays
+- **Modern Glass UI**: Glassmorphism design with mesh gradient backgrounds
+- **Animated Backgrounds**: Floating gradient orbs and subtle grid overlays
 - **Gradient Buttons**: Beautiful platform-specific gradient buttons with hover effects
 - **Changelog Page**: Track all updates and improvements at `/changelog`
 
@@ -73,8 +80,8 @@ Open [http://localhost:3000](http://localhost:3000)
 ```
 ├── app/
 │   ├── page.tsx              # Main page with view routing
-│   ├── layout.tsx            # Root layout with metadata
-│   ├── globals.css           # Global styles
+│   ├── layout.tsx            # Root layout + theme initialization
+│   ├── globals.css           # Theme system + CSS variables
 │   ├── changelog/
 │   │   └── page.tsx          # Changelog page
 │   └── api/
@@ -88,6 +95,7 @@ Open [http://localhost:3000](http://localhost:3000)
 │   ├── ProgressView.tsx      # Real-time generation progress
 │   ├── PreviewView.tsx       # Tabbed content preview & publishing
 │   ├── HistoryView.tsx       # Post history management
+│   ├── CalendarView.tsx      # Drag-and-drop content calendar
 │   ├── SettingsView.tsx      # API key configuration
 │   └── PlatformPreviews/
 │       ├── XPreviewCard.tsx       # Pixel-perfect X/Twitter preview
@@ -99,6 +107,20 @@ Open [http://localhost:3000](http://localhost:3000)
 └── public/                   # Static assets
 ```
 
+## Theme System
+
+The app supports **light and dark modes** with automatic system preference detection.
+
+- **Auto-detection**: Uses `prefers-color-scheme` media query on first load
+- **Persistence**: Theme choice saved to `localStorage` as `smm-theme`
+- **No flash**: Theme applied via inline script before React hydrates
+- **CSS Variables**: All colors defined as custom properties in `globals.css`
+
+Theme is controlled via `data-theme` attribute on `<html>`:
+```html
+<html data-theme="light">  <!-- or "dark" -->
+```
+
 ## Tech Stack
 
 | Technology | Version | Purpose |
@@ -107,6 +129,8 @@ Open [http://localhost:3000](http://localhost:3000)
 | React | 19.2.3 | UI library |
 | Tailwind CSS | 4.x | Utility-first styling |
 | Zustand | 5.0.9 | Lightweight state management |
+| @dnd-kit | 6.x | Drag-and-drop for calendar |
+| date-fns | 4.x | Date manipulation |
 | react-markdown | 10.1.0 | Markdown rendering |
 | Claude Opus 4.5 | Latest | AI content generation |
 | Google Imagen | Latest | AI image generation (Nano Banana Pro) |
