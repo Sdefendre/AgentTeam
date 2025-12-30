@@ -44,17 +44,19 @@ function DraggablePost({ post, onDelete }: DraggablePostProps) {
     cursor: isDragging ? 'grabbing' : 'grab',
   }
 
-  const statusColors = {
+  const statusColors: Record<string, string> = {
     draft: 'border-slate-600 bg-slate-800/50',
     scheduled: 'border-violet-500/40 bg-violet-500/10',
     published: 'border-green-500/40 bg-green-500/10'
   }
 
-  const statusIcons = {
+  const statusIcons: Record<string, string> = {
     draft: '📝',
     scheduled: '⏰',
     published: '✅'
   }
+
+  const status = post.status as string
 
   return (
     <div
@@ -62,12 +64,12 @@ function DraggablePost({ post, onDelete }: DraggablePostProps) {
       style={style}
       {...attributes}
       {...listeners}
-      className={`group relative p-1.5 mb-1 rounded border text-[10px] transition-all hover:scale-[1.02] ${statusColors[post.status]} ${isDragging ? 'z-50' : ''}`}
+      className={`group relative p-1.5 mb-1 rounded border text-[10px] transition-all hover:scale-[1.02] ${statusColors[status] || ''} ${isDragging ? 'z-50' : ''}`}
     >
       <div className="flex items-start justify-between gap-1">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-0.5">
-            <span className="text-xs">{statusIcons[post.status]}</span>
+            <span className="text-xs">{statusIcons[status] || '📝'}</span>
             <span className="text-white font-medium truncate text-[10px]">{post.topic}</span>
           </div>
         </div>
