@@ -29,9 +29,24 @@ export const viewport: Viewport = {
   maximumScale: 5,
   minimumScale: 1,
   userScalable: true,
-  themeColor: "#0f172a",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f6f3ee" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b0f14" },
+  ],
   viewportFit: "cover",
 };
+
+const themeScript = `
+  (() => {
+    try {
+      const stored = localStorage.getItem('smm-theme');
+      const theme = stored === 'light' || stored === 'dark'
+        ? stored
+        : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.dataset.theme = theme;
+    } catch (e) {}
+  })();
+`;
 
 export default function RootLayout({
   children,
@@ -39,10 +54,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         {children}
       </body>
     </html>

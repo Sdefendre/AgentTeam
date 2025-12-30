@@ -2,8 +2,7 @@
 
 import { useStore } from '@/store/useStore'
 import { useState, useMemo } from 'react'
-import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useDraggable, useDroppable, pointerWithin, rectIntersection } from '@dnd-kit/core'
-import { CSS } from '@dnd-kit/utilities'
+import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useDraggable, useDroppable, rectIntersection } from '@dnd-kit/core'
 import {
   format,
   startOfMonth,
@@ -14,8 +13,19 @@ import {
   addMonths,
   subMonths,
   startOfWeek,
-  endOfWeek
+  endOfWeek,
+  isValid,
+  parseISO
 } from 'date-fns'
+
+const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+
+const getDateKey = (value?: string | null) => {
+  if (!value) return null
+  if (DATE_KEY_PATTERN.test(value)) return value
+  const parsed = parseISO(value)
+  return isValid(parsed) ? format(parsed, 'yyyy-MM-dd') : null
+}
 
 interface DraggablePostProps {
   post: any
@@ -62,11 +72,17 @@ function DraggablePost({ post, onDelete }: DraggablePostProps) {
           </div>
         </div>
         <button
+          type="button"
+          onPointerDown={(e) => {
+            // Prevent drag sensor from hijacking the click (especially on touch)
+            e.stopPropagation()
+          }}
           onClick={(e) => {
             e.stopPropagation()
             onDelete(post.id)
           }}
-          className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition-opacity text-xs"
+          className="opacity-70 sm:opacity-0 sm:group-hover:opacity-100 text-red-400 hover:text-red-300 transition-opacity text-xs"
+          aria-label="Delete scheduled post"
         >
           ×
         </button>
@@ -189,7 +205,8 @@ export default function CalendarView() {
   const postsByDate = useMemo(() => {
     const grouped: { [key: string]: any[] } = {}
     scheduledPosts.forEach(post => {
-      const dateKey = format(new Date(post.scheduledDate), 'yyyy-MM-dd')
+      const dateKey = getDateKey(post.scheduledDate)
+      if (!dateKey) return
       if (!grouped[dateKey]) grouped[dateKey] = []
       grouped[dateKey].push(post)
     })
@@ -214,24 +231,30 @@ export default function CalendarView() {
 
     if (over) {
       const activeData = active.data.current
-      const newDate = over.id as string
+      const newDate = getDateKey(String(over.id))
 
-      // Check if dragging from history
-      if (activeData?.historyItem) {
-        // Create new scheduled post from history item
-        const newPost = {
-          id: `scheduled-${Date.now()}`,
-          topic: activeData.historyItem.topic,
-          scheduledDate: newDate,
-          status: 'draft' as const,
-          platforms: ['x' as const, 'linkedin' as const],
-          results: activeData.historyItem.results
+      if (newDate) {
+        // Check if dragging from history
+        if (activeData?.historyItem) {
+          // Create new scheduled post from history item
+          const newPost = {
+            id: `scheduled-${Date.now()}`,
+            topic: activeData.historyItem.topic,
+            scheduledDate: newDate,
+            status: 'draft' as const,
+            platforms: ['x' as const, 'linkedin' as const],
+            results: activeData.historyItem.results
+          }
+          addScheduledPost(newPost)
+        } else {
+          // Moving existing scheduled post
+          const postId = active.id as string
+          const existingPost = scheduledPosts.find(post => post.id === postId)
+          const existingDate = existingPost ? getDateKey(existingPost.scheduledDate) : null
+          if (existingDate !== newDate) {
+            updateScheduledPost(postId, { scheduledDate: newDate })
+          }
         }
-        addScheduledPost(newPost)
-      } else if (active.id !== over.id) {
-        // Moving existing scheduled post
-        const postId = active.id as string
-        updateScheduledPost(postId, { scheduledDate: newDate })
       }
     }
 
